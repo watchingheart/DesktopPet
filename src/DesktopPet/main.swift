@@ -34,6 +34,15 @@ enum LayoutConstants {
 
     /// Display size for GIF animations (relative to pet size)
     static let gifDisplayScale: CGFloat = 0.5
+
+    /// Size for mini rabbits (2/3 of big rabbit)
+    static let miniPetSize: CGFloat = 53
+
+    /// Maximum number of mini rabbits allowed at once
+    static let maxMiniRabbits: Int = 3
+
+    /// Duration before mini rabbits auto-disappear (seconds)
+    static let miniRabbitLifetime: TimeInterval = 3.0
 }
 
 /// API and network constants
@@ -713,6 +722,19 @@ enum PetState: Int {
     }
 }
 
+// MARK: - Mini Rabbit Model
+
+/// Represents a mini rabbit that spawns and runs around.
+/// Mini rabbits are smaller versions of the pet that appear temporarily.
+struct MiniRabbit: Identifiable {
+    let id = UUID()
+    let image: NSImage
+    let spawnTime: Date
+    var position: CGPoint
+    var opacity: CGFloat = 1.0
+    var timer: Timer?
+}
+
 // MARK: - Pet Controller
 
 /// Main controller for the desktop pet.
@@ -723,6 +745,7 @@ class PetController: ObservableObject {
     @Published var isSleeping: Bool = false
     @Published var petImage: NSImage?
     @Published var soundText: String? = nil
+    @Published var miniRabbits: [MiniRabbit] = []
 
     var onPositionChange: ((CGPoint) -> Void)?
     var onJump: (() -> Void)?
@@ -1020,10 +1043,16 @@ class PetController: ObservableObject {
             scheduleBehaviorChange()
             return
         }
+
         if let newState = state.possibleTransitions().randomElement() {
             transitionTo(newState)
         }
         scheduleBehaviorChange()
+
+        // Randomly spawn mini rabbit (10% chance)
+        if Int.random(in: 0...100) < 10 {
+            spawnMiniRabbit()
+        }
     }
 
     func transitionTo(_ newState: PetState) {
@@ -1146,8 +1175,6 @@ class PetController: ObservableObject {
             }
             self.transform = FrameTransform(scaleX: squash, scaleY: 2.0 - squash)
         }
-    }
-
     func beginDrag() {
         behaviorTimer?.invalidate()
         stopWalking()
@@ -1161,6 +1188,73 @@ class PetController: ObservableObject {
     func endDrag() {
         transitionTo(.idle)
         scheduleBehaviorChange()
+    }
+
+    // MARK: - Mini Rabbits
+
+    /// Spawns a mini rabbit at a random position near the pet.
+    /// Mini rabbits are 2/3 the size of the main pet and run around.
+    /// They automatically disappear after ~3 seconds.
+    /// Maximum of 3 mini rabbits can exist at once.
+    func spawnMiniRabbit() {
+        guard miniRabbits.count < LayoutConstants.maxMiniRabbits else { return }
+        guard let petImage = petImage else { return }
+
+        // Generate random position near current position
+        let randomOffset: CGFloat = CGFloat.random(in: -100...100)
+        let spawnPosition = CGPoint(
+            x: position.x + randomOffset,
+            y: position.y + randomOffset
+        )
+
+        var miniRabbit = MiniRabbit(
+            image: petImage,
+            spawnTime: Date(),
+            position: spawnPosition
+        )
+
+        // Set up timer for auto-disappear and running animation
+        miniRabbit.timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+
+            let elapsed = Date().timeIntervalSince(miniRabbit.spawnTime)
+
+            // Fade out in the last second
+            if elapsed >= LayoutConstants.miniRabbitLifetime - 1.0 {
+                miniRabbit.opacity = CGFloat(LayoutConstants.miniRabbitLifetime - elapsed)
+            }
+
+            // Auto-remove after lifetime
+            if elapsed >= LayoutConstants.miniRabbitLifetime {
+                self.removeMiniRabbit(miniRabbit)
+                timer.invalidate()
+                return
+            }
+
+            // Make mini rabbit run around
+            let runSpeed: CGFloat = 2.0
+            let randomX = CGFloat.random(in: -runSpeed...runSpeed)
+            let randomY = CGFloat.random(in: -runSpeed...runSpeed)
+            miniRabbit.position.x += randomX
+            miniRabbit.position.y += randomY
+
+            // Update the mini rabbit in the array
+            if let index = self.miniRabbits.firstIndex(where: { $0.id == miniRabbit.id }) {
+                self.miniRabbits[index] = miniRabbit
+            }
+        }
+
+        miniRabbits.append(miniRabbit)
+    }
+
+    /// Removes a specific mini rabbit from the array and invalidates its timer.
+    /// - Parameter miniRabbit: The mini rabbit to remove
+    func removeMiniRabbit(_ miniRabbit: MiniRabbit) {
+        miniRabbit.timer?.invalidate()
+        miniRabbits.removeAll { $0.id == miniRabbit.id }
     }
 }
 
@@ -1246,6 +1340,18 @@ struct PetViewContent: View {
         .animation(.easeOut(duration: 0.3), value: controller.soundText)
         .background(Color.clear)
         .frame(maxWidth: LayoutConstants.mainWindowSize.width, maxHeight: LayoutConstants.mainWindowSize.height)
+        .overlay(
+            // Mini Rabbits Overlay
+            ZStack {
+                ForEach(controller.miniRabbits) { miniRabbit in
+                    MiniRabbitView(
+                        image: miniRabbit.image,
+                        opacity: miniRabbit.opacity,
+                        position: miniRabbit.position
+                    )
+                }
+            }
+        )
         .contentShape(Rectangle())
     }
 }
@@ -1339,7 +1445,6 @@ class PetInteractionView: NSView {
 
         let clickLocation = event.locationInWindow
 
-        }
         if clickCount == 2 {
             // 双击 - 直接处理，取消延迟的单击
             lastClickTime = nil
@@ -1738,3 +1843,21 @@ NSApp.setActivationPolicy(.accessory)
 let delegate = AppDelegate()
 NSApp.delegate = delegate
 NSApp.run()
+
+// MARK: - Mini Rabbit View
+
+/// SwiftUI view for rendering a mini rabbit.
+/// Mini rabbits are smaller versions of the pet that run around temporarily.
+struct MiniRabbitView: View {
+    let image: NSImage
+    let opacity: CGFloat
+    let position: CGPoint
+
+    var body: some View {
+        Image(nsImage: image)
+            .resizable()
+            .frame(width: LayoutConstants.miniPetSize, height: LayoutConstants.miniPetSize)
+            .opacity(opacity)
+            .position(x: position.x, y: position.y)
+    }
+}
