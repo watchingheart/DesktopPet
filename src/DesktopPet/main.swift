@@ -4,8 +4,123 @@ import Combine
 import CoreGraphics
 import CommonCrypto
 
+// MARK: - Configuration Constants
+
+/// Animation and timing constants
+enum AnimationConstants {
+    /// Frame rate for smooth animations (60 FPS)
+    static let animationFrameRate: TimeInterval = 1.0 / 60.0
+
+    /// Frame rate for GIF playback (10 FPS)
+    static let gifFrameRate: TimeInterval = 0.1
+
+    /// Duration for sound/text bubble display
+    static let soundDisplayDuration: TimeInterval = 2.0
+
+    /// Duration for jump animation
+    static let jumpAnimationDuration: TimeInterval = 0.3
+
+    /// Delay before processing single click (to detect double-click)
+    static let clickDelay: TimeInterval = 0.25
+}
+
+/// UI Layout constants
+enum LayoutConstants {
+    /// Default size for pet images
+    static let defaultPetSize: NSSize = NSSize(width: 100, height: 100)
+
+    /// Size for the main window/view
+    static let mainWindowSize: NSSize = NSSize(width: 600, height: 600)
+
+    /// Display size for GIF animations (relative to pet size)
+    static let gifDisplayScale: CGFloat = 0.5
+}
+
+/// API and network constants
+enum NetworkConstants {
+    /// Timeout for API requests (seconds)
+    static let requestTimeout: TimeInterval = 120
+
+    /// Delay before retrying a failed operation
+    static let retryDelay: TimeInterval = 3.0
+
+    /// Longer delay for second retry
+    static let longRetryDelay: TimeInterval = 6.0
+}
+
+// MARK: - Resource Path Helper
+
+/// Returns the path to a resource file, checking multiple possible locations
+func resourcePath(named name: String) -> URL? {
+    // First, try Bundle.main.resourcePath (for when resources are bundled)
+    if let resourcePath = Bundle.main.resourcePath {
+        let bundleURL = URL(fileURLWithPath: resourcePath).appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: bundleURL.path) {
+            return bundleURL
+        }
+    }
+
+    // Second, try relative to the executable
+    if let executablePath = Bundle.main.executablePath {
+        let execDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent()
+        let relativeURL = execDir.appendingPathComponent("../resources").appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: relativeURL.path) {
+            return relativeURL.standardizedFileURL
+        }
+    }
+
+    // Third, try the project's tools directory (for development)
+    let projectPath = FileManager.default.currentDirectoryPath
+    let toolsURL = URL(fileURLWithPath: projectPath).appendingPathComponent("tools/rabbit_output").appendingPathComponent(name)
+    if FileManager.default.fileExists(atPath: toolsURL.path) {
+        return toolsURL
+    }
+
+    print("Warning: Resource '\(name)' not found")
+    return nil
+}
+
+// MARK: - Migration Helper
+
+/// Handles migration from UserDefaults to Keychain for sensitive data
+class KeychainMigration {
+    static let shared = KeychainMigration()
+    private let userDefaultsKey = "ai_api_key"
+    private let migrationCompletedKey = "keychain_migration_completed"
+
+    private init() {}
+
+    /// Performs migration if not already done
+    func migrateIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: migrationCompletedKey) else {
+            return
+        }
+
+        // Check if there's an API key in UserDefaults
+        if let existingKey = UserDefaults.standard.string(forKey: userDefaultsKey), !existingKey.isEmpty {
+            // Migrate to Keychain
+            if KeychainHelper.saveApiKey(existingKey) {
+                print("Successfully migrated API Key from UserDefaults to Keychain")
+
+                // Clear from UserDefaults after successful migration
+                UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+
+                // Mark migration as complete
+                UserDefaults.standard.set(true, forKey: migrationCompletedKey)
+            } else {
+                print("Failed to migrate API Key to Keychain")
+            }
+        } else {
+            // No existing key, mark migration as complete
+            UserDefaults.standard.set(true, forKey: migrationCompletedKey)
+        }
+    }
+}
+
 // MARK: - Animation Cache Manager
 
+/// Manages caching of AI-generated animation frames to disk.
+/// Reduces API calls by storing generated frames keyed by image hash and action type.
 class AnimationCache {
     static let shared = AnimationCache()
 
@@ -14,7 +129,11 @@ class AnimationCache {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let cacheDir = appSupport.appendingPathComponent("DesktopPet/AnimationCache")
         if !fileManager.fileExists(atPath: cacheDir.path) {
-            try? fileManager.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            do {
+                try fileManager.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            } catch {
+                print("Warning: Failed to create cache directory: \(error.localizedDescription)")
+            }
         }
         return cacheDir
     }
@@ -34,7 +153,11 @@ class AnimationCache {
             if let tiffData = frame.tiffRepresentation,
                let bitmap = NSBitmapImageRep(data: tiffData),
                let pngData = bitmap.representation(using: .png, properties: [:]) {
-                try? pngData.write(to: fileURL)
+                do {
+                    try pngData.write(to: fileURL)
+                } catch {
+                    print("Warning: Failed to save cached frame \(index): \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -68,13 +191,24 @@ class AnimationCache {
 
     // 清除所有缓存
     func clearCache() {
-        try? fileManager.removeItem(at: cacheDirectory)
-        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        do {
+            try fileManager.removeItem(at: cacheDirectory)
+        } catch {
+            print("Warning: Failed to clear cache directory: \(error.localizedDescription)")
+        }
+        do {
+            try fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        } catch {
+            print("Warning: Failed to recreate cache directory: \(error.localizedDescription)")
+        }
     }
 }
 
-// Data extension for SHA256
+// MARK: - Data Extensions
+
 extension Data {
+    /// Computes the SHA-256 hash of this data.
+    /// - Returns: Hexadecimal string representation of the hash, or nil if computation fails.
     var sha256: String? {
         guard let digest = self.withUnsafeBytes({ bytes -> [UInt8]? in
             var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
@@ -112,8 +246,16 @@ enum AIProvider: String, CaseIterable {
     }
 }
 
+/// Service for generating pet animations using AI image generation APIs.
+/// Supports multiple AI providers (Zhipu AI, OpenAI, DeepSeek, Moonshot).
+/// Includes caching to reduce API calls and local transformation fallback.
 class AIAnimationService {
     static let shared = AIAnimationService()
+
+    init() {
+        // Perform migration on initialization
+        KeychainMigration.shared.migrateIfNeeded()
+    }
 
     var provider: AIProvider {
         get { AIProvider(rawValue: UserDefaults.standard.string(forKey: "ai_provider") ?? "zhipu") ?? .zhipu }
@@ -121,8 +263,22 @@ class AIAnimationService {
     }
 
     var apiKey: String {
-        get { UserDefaults.standard.string(forKey: "ai_api_key") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "ai_api_key") }
+        get {
+            // Read from Keychain
+            if let key = KeychainHelper.readApiKey() {
+                return key
+            }
+            return ""
+        }
+        set {
+            // Save to Keychain
+            if newValue.isEmpty {
+                // If setting to empty, delete from Keychain
+                KeychainHelper.deleteApiKey()
+            } else {
+                KeychainHelper.saveApiKey(newValue)
+            }
+        }
     }
 
     var apiEndpoint: String {
@@ -209,11 +365,12 @@ class AIAnimationService {
         }
 
         guard let httpBody = try? JSONSerialization.data(withJSONObject: body) else {
+            print("Error: Failed to serialize JSON request body")
             completion(nil)
             return
         }
         request.httpBody = httpBody
-        request.timeoutInterval = 120
+        request.timeoutInterval = NetworkConstants.requestTimeout
 
         print("Calling API: \(apiEndpoint)")
         print("Provider: \(provider.rawValue)")
@@ -470,8 +627,19 @@ enum AnimationType: String, CaseIterable {
         case .walk: return 0.5
         case .jump: return 0.8
         case .sit: return 3.0
-        case .sleep: return 4.0
+        case .sleep: return 10.0
         case .click: return 0.3
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .idle: return "待机"
+        case .walk: return "行走"
+        case .jump: return "跳跃"
+        case .sit: return "坐下"
+        case .sleep: return "睡觉"
+        case .click: return "点击"
         }
     }
 }
@@ -547,10 +715,14 @@ enum PetState: Int {
 
 // MARK: - Pet Controller
 
+/// Main controller for the desktop pet.
+/// Manages pet state, animations, behaviors, and user interactions.
+/// Coordinates between the pet model and the view layer.
 class PetController: ObservableObject {
     @Published var transform: FrameTransform = .identity
     @Published var isSleeping: Bool = false
     @Published var petImage: NSImage?
+    @Published var soundText: String? = nil
 
     var onPositionChange: ((CGPoint) -> Void)?
     var onJump: (() -> Void)?
@@ -558,8 +730,12 @@ class PetController: ObservableObject {
     private var state: PetState = .idle
     private var animationTimer: Timer?
     private var behaviorTimer: Timer?
+    private var soundTimer: Timer?
     private var position: CGPoint = .zero
-    private let petSize: CGFloat = 120
+    private let petSize: CGFloat = 80
+
+    private let sounds = ["吱吱", "啾啾", "咕咕", "吱吱吱", "咕~", "啾!", "噗噗"]
+    private let sleepWords = ["💤", "zzZ", "zzz", "呼噜...", "💤💤", "Zzz...", "呼呼~"]
 
     init() {
         if let screen = NSScreen.main {
@@ -569,8 +745,15 @@ class PetController: ObservableObject {
                 y: frame.midY - petSize/2
             )
         }
+        // 默认加载兔子 GIF
+        guard let gifURL = resourcePath(named: "兔_idle.gif") else {
+            print("Error: Default GIF not found")
+            return
+        }
+        loadGifFrames(from: gifURL)
         startAnimation()
         scheduleBehaviorChange()
+        scheduleSound()
     }
 
     func getWindowPosition() -> CGPoint { position }
@@ -584,7 +767,7 @@ class PetController: ObservableObject {
 
         guard let image = NSImage(contentsOf: url) else { return }
         // 调整图片大小
-        var resized = resizeImage(image, to: NSSize(width: 100, height: 100))
+        var resized = resizeImage(image, to: LayoutConstants.defaultPetSize)
         // 去除背景
         resized = removeBackground(from: resized)
         DispatchQueue.main.async {
@@ -599,27 +782,40 @@ class PetController: ObservableObject {
     private var currentFrameIndex: Int = 0
 
     func loadGifFrames(from url: URL) {
-        guard let imageData = try? Data(contentsOf: url) else { return }
+        guard let imageData = try? Data(contentsOf: url) else {
+            print("Error: Failed to load GIF from \(url.path)")
+            return
+        }
 
         // 使用 ImageIO 解析 GIF
-        guard let imageSource = CGImageSourceCreateWithData(imageData as CFData, nil) else { return }
+        guard let imageSource = CGImageSourceCreateWithData(imageData as CFData, nil) else {
+            print("Error: Failed to create image source from GIF")
+            return
+        }
 
         let frameCount = CGImageSourceGetCount(imageSource)
         var frames: [NSImage] = []
 
+        // GIF 显示尺寸
+        let displaySize: CGFloat = petSize * 0.5  // 40px
+
         for i in 0..<frameCount {
             if let cgImage = CGImageSourceCreateImageAtIndex(imageSource, i, nil) {
-                // 处理 GIF 透明色：手动将品红色 (255,0,255) 转换为透明
-                let processedImage = processGIFTransparency(cgImage)
-                let nsImage = NSImage(cgImage: processedImage, size: NSSize(width: processedImage.width, height: processedImage.height))
-                frames.append(nsImage)
+                // 直接转换为 RGBA 格式以保留透明度
+                if let rgbaImage = cgImage.convertToRGBA() {
+                    let nsImage = NSImage(cgImage: rgbaImage, size: NSSize(width: displaySize, height: displaySize))
+                    frames.append(nsImage)
+                } else {
+                    let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: displaySize, height: displaySize))
+                    frames.append(nsImage)
+                }
             }
         }
 
         if frames.isEmpty {
             // 如果没有帧，当作普通图片处理
             if let image = NSImage(contentsOf: url) {
-                let resized = resizeImage(image, to: NSSize(width: 100, height: 100))
+                let resized = resizeImage(image, to: LayoutConstants.defaultPetSize)
                 DispatchQueue.main.async {
                     self.petImage = resized
                 }
@@ -635,78 +831,6 @@ class PetController: ObservableObject {
         }
     }
 
-    // 处理 GIF 透明色：将品红色 (255,0,255) 转换为 alpha=0
-    func processGIFTransparency(_ cgImage: CGImage) -> CGImage {
-        let width = cgImage.width
-        let height = cgImage.height
-        let bytesPerPixel = cgImage.bitsPerPixel / 8
-        let bytesPerRow = cgImage.bytesPerRow
-
-        guard let dataProvider = cgImage.dataProvider,
-              let data = CFDataCreateCopy(nil, dataProvider.data) else {
-            return cgImage
-        }
-
-        let pixels = CFDataGetBytePtr(data)
-
-        // 创建带有 alpha 通道的图像数据
-        let outputBytesPerRow = width * 4
-        var imageData = Data(count: height * outputBytesPerRow)
-
-        imageData.withUnsafeMutableBytes { destPtr in
-            guard let dest = destPtr.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return }
-
-            for y in 0..<height {
-                for x in 0..<width {
-                    let srcOffset = y * bytesPerRow + x * bytesPerPixel
-                    let dstOffset = y * outputBytesPerRow + x * 4
-
-                    let r = pixels![srcOffset]
-                    let g = pixels![srcOffset + 1]
-                    let b = pixels![srcOffset + 2]
-
-                    // 检查是否是品红色（GIF 透明色）
-                    if r == 255 && g == 0 && b == 255 {
-                        // 透明
-                        dest[dstOffset] = 0
-                        dest[dstOffset + 1] = 0
-                        dest[dstOffset + 2] = 0
-                        dest[dstOffset + 3] = 0
-                    } else {
-                        // 保留原色
-                        dest[dstOffset] = r
-                        dest[dstOffset + 1] = g
-                        dest[dstOffset + 2] = b
-                        dest[dstOffset + 3] = 255
-                    }
-                }
-            }
-        }
-
-        // 创建新的 CGImage
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-
-        guard let provider = CGDataProvider(data: imageData as CFData),
-              let newImage = CGImage(
-                width: width,
-                height: height,
-                bitsPerComponent: 8,
-                bitsPerPixel: 32,
-                bytesPerRow: outputBytesPerRow,
-                space: colorSpace,
-                bitmapInfo: bitmapInfo,
-                provider: provider,
-                decode: nil,
-                shouldInterpolate: false,
-                intent: .defaultIntent
-              ) else {
-            return cgImage
-        }
-
-        return newImage
-    }
-
     private func startGifAnimation() {
         gifTimer?.invalidate()
 
@@ -715,7 +839,7 @@ class PetController: ObservableObject {
             currentFrameIndex = 0
 
             // 默认每帧 100ms
-            gifTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            gifTimer = Timer.scheduledTimer(withTimeInterval: AnimationConstants.gifFrameRate, repeats: true) { [weak self] _ in
                 guard let self = self, !self.gifFrames.isEmpty else { return }
                 self.currentFrameIndex = (self.currentFrameIndex + 1) % self.gifFrames.count
                 self.petImage = self.gifFrames[self.currentFrameIndex]
@@ -830,7 +954,7 @@ class PetController: ObservableObject {
     // MARK: - Animation
 
     private func startAnimation() {
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
+        animationTimer = Timer.scheduledTimer(withTimeInterval: AnimationConstants.animationFrameRate, repeats: true) { [weak self] _ in
             self?.updateAnimation()
         }
     }
@@ -869,6 +993,28 @@ class PetController: ObservableObject {
         }
     }
 
+    private func scheduleSound() {
+        soundTimer?.invalidate()
+        let interval = TimeInterval.random(in: 5...15)
+        soundTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
+            self?.playRandomSound()
+            self?.scheduleSound()
+        }
+    }
+
+    private func playRandomSound() {
+        // 睡觉时不触发随机文字（showSleepingText 已处理）
+        guard !isSleeping else { return }
+
+        // 醒着时显示叫声
+        soundText = sounds.randomElement()
+
+        // 2秒后清除文字
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationConstants.soundDisplayDuration) { [weak self] in
+            self?.soundText = nil
+        }
+    }
+
     private func changeBehavior() {
         guard state != .interacting else {
             scheduleBehaviorChange()
@@ -884,6 +1030,21 @@ class PetController: ObservableObject {
         state = newState
         animationStartTime = Date()
         if newState == .walking { startWalking() } else { stopWalking() }
+
+        // 进入睡觉状态时立即显示睡觉文字
+        if newState == .sleeping {
+            showSleepingText()
+        }
+    }
+
+    private func showSleepingText() {
+        soundText = sleepWords.randomElement()
+
+        // 每2秒刷新一次睡觉文字
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationConstants.soundDisplayDuration) { [weak self] in
+            guard self?.state == .sleeping else { return }
+            self?.showSleepingText()
+        }
     }
 
     // MARK: - Movement
@@ -893,7 +1054,7 @@ class PetController: ObservableObject {
 
     private func startWalking() {
         pickNewTarget()
-        walkTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
+        walkTimer = Timer.scheduledTimer(withTimeInterval: AnimationConstants.animationFrameRate, repeats: true) { [weak self] _ in
             self?.updateWalking()
         }
     }
@@ -932,7 +1093,7 @@ class PetController: ObservableObject {
         guard state != .interacting else { return }
         state = .interacting
         animationStartTime = Date()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationConstants.jumpAnimationDuration) { [weak self] in
             self?.transitionTo(.idle)
             self?.scheduleBehaviorChange()
         }
@@ -951,7 +1112,7 @@ class PetController: ObservableObject {
         behaviorTimer?.invalidate()
 
         // 跳跃动画 - 移动窗口位置
-        walkTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] timer in
+        walkTimer = Timer.scheduledTimer(withTimeInterval: AnimationConstants.animationFrameRate, repeats: true) { [weak self] timer in
             guard let self = self else { return }
             let elapsed = Date().timeIntervalSince(startTime)
             let progress = CGFloat(elapsed / jumpDuration)
@@ -1012,13 +1173,29 @@ struct PetViewContent: View {
     var body: some View {
         ZStack {
             // 背景色：透明
+
+            // 叫声文字气泡
+            if let sound = controller.soundText {
+                Text(sound)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(Color.black.opacity(0.7))
+                    )
+                    .offset(y: -100)  // 显示在宠物上方
+                    .transition(.opacity.combined(with: .scale))
+                    .zIndex(10)
+            }
+
             if let image = controller.petImage {
-            if let image = controller.petImage {
-                // 自定义图片 - 使用原始尺寸显示
+                // 自定义图片 - 使用固定尺寸显示
                 Image(nsImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 600, maxHeight: 600)
+                    .frame(width: 300, height: 300)
                     .scaleEffect(x: controller.transform.scaleX, y: controller.transform.scaleY)
                     .rotationEffect(.radians(Double(controller.transform.rotation)))
                     .offset(y: controller.transform.offsetY)
@@ -1066,7 +1243,9 @@ struct PetViewContent: View {
                 }
             }
         }
-        .frame(maxWidth: 600, maxHeight: 600)
+        .animation(.easeOut(duration: 0.3), value: controller.soundText)
+        .background(Color.clear)
+        .frame(maxWidth: LayoutConstants.mainWindowSize.width, maxHeight: LayoutConstants.mainWindowSize.height)
         .contentShape(Rectangle())
     }
 }
@@ -1136,22 +1315,31 @@ class PetInteractionView: NSView {
         layer?.backgroundColor = .clear
 
         let hosting = NSHostingView(rootView: PetViewContent(controller: controller))
-        hosting.frame = NSRect(x: 0, y: 0, width: 600, height: 600)
+        hosting.frame = NSRect(origin: .zero, size: LayoutConstants.mainWindowSize)
         hosting.wantsLayer = true
         hosting.layer?.backgroundColor = .clear
         addSubview(hosting)
         self.hostingView = hosting
     }
 
+    /// NSCoding is not supported for this view.
+    /// This view is initialized programmatically via `init(controller:window:)`.
+    /// If you need to use this view in a NIB/Storyboard, implement NSCoding support.
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        // NSCoding/NIB loading is not supported - use init(controller:window:) instead
+        return nil
     }
+
 
     override func mouseDown(with event: NSEvent) {
         let now = Date()
         let clickCount = event.clickCount
 
         // 使用系统的 clickCount 来判断单击/双击
+
+        let clickLocation = event.locationInWindow
+
+        }
         if clickCount == 2 {
             // 双击 - 直接处理，取消延迟的单击
             lastClickTime = nil
@@ -1159,7 +1347,7 @@ class PetInteractionView: NSView {
         } else if clickCount == 1 {
             lastClickTime = now
             // 延迟处理单击，等待可能的第二次点击
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + AnimationConstants.clickDelay) { [weak self] in
                 if self?.lastClickTime != nil {
                     self?.controller?.handleClick()
                     self?.lastClickTime = nil
@@ -1199,6 +1387,22 @@ class PetInteractionView: NSView {
         let jumpItem = NSMenuItem(title: "跳跃", action: #selector(doJump), keyEquivalent: "")
         jumpItem.target = self
         menu.addItem(jumpItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // 动作切换菜单
+        let actionMenu = NSMenu()
+        let actionMenuItem = NSMenuItem(title: "动作", action: nil, keyEquivalent: "")
+
+        for animType in AnimationType.allCases {
+            let item = NSMenuItem(title: animType.displayName, action: #selector(switchAction(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = animType
+            actionMenu.addItem(item)
+        }
+
+        menu.setSubmenu(actionMenu, for: actionMenuItem)
+        menu.addItem(actionMenuItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -1259,11 +1463,11 @@ class PetInteractionView: NSView {
         // 强制切换几个动作展示效果
         controller?.transitionTo(.walking)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + NetworkConstants.retryDelay) {
             self.controller?.transitionTo(.sleeping)
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + NetworkConstants.longRetryDelay) {
             self.controller?.transitionTo(.idle)
         }
 
@@ -1279,6 +1483,20 @@ class PetInteractionView: NSView {
         controller?.handleDoubleClick()
     }
 
+    @objc private func switchAction(_ sender: NSMenuItem) {
+        guard let animType = sender.representedObject as? AnimationType else { return }
+        loadActionGIF(animType)
+    }
+
+    private func loadActionGIF(_ action: AnimationType) {
+        let gifName = "兔_\(action.rawValue).gif"
+        guard let gifURL = resourcePath(named: gifName) else {
+            print("Error: GIF '\(gifName)' not found")
+            return
+        }
+        controller?.loadGifFrames(from: gifURL)
+    }
+
     @objc private func selectImage() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image]
@@ -1291,7 +1509,12 @@ class PetInteractionView: NSView {
     }
 
     @objc private func resetImage() {
-        controller?.petImage = nil
+        // Reset to default idle animation (reloads default GIF)
+        guard let gifURL = resourcePath(named: "兔_idle.gif") else {
+            print("Error: Default GIF not found")
+            return
+        }
+        controller?.loadGifFrames(from: gifURL)
     }
 
     @objc private func setApiKey() {
@@ -1407,10 +1630,12 @@ class PetInteractionView: NSView {
 
 // MARK: - Pet Window
 
+/// A borderless, transparent window for displaying the desktop pet.
+/// Configured to float above other windows and be visible on all spaces.
 class PetWindow: NSWindow {
     init(position: CGPoint) {
         // 设置足够大的窗口尺寸来容纳各种图片
-        let size = CGSize(width: 600, height: 600)
+        let size = LayoutConstants.mainWindowSize
         super.init(
             contentRect: NSRect(origin: position, size: size),
             styleMask: [.borderless],
@@ -1432,8 +1657,41 @@ class PetWindow: NSWindow {
     }
 }
 
+// MARK: - CGImage Extension for RGBA Conversion
+
+extension CGImage {
+    func convertToRGBA() -> CGImage? {
+        let width = self.width
+        let height = self.height
+
+        // 创建 RGBA 上下文
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+        let bytesPerRow = width * 4
+
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else {
+            return nil
+        }
+
+        // 绘制原图到 RGBA 上下文，自动处理透明度
+        context.draw(self, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        return context.makeImage()
+    }
+}
+
 // MARK: - App Delegate
 
+/// Application delegate for the desktop pet.
+/// Sets up the main window, status bar menu, and handles app lifecycle events.
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var petWindow: PetWindow?
     private var petController: PetController?
