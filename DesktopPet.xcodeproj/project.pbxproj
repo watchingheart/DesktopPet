@@ -1,0 +1,490 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		111111111111111111111111 /* DesktopPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222222222222222222222222 /* DesktopPetApp.swift */; };
+		333333333333333333333333 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444444444444444444444444 /* AppDelegate.swift */; };
+		555555555555555555555555 /* PetWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 666666666666666666666666 /* PetWindow.swift */; };
+		777777777777777777777777 /* PetWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888888888888888888888888 /* PetWindowController.swift */; };
+		999999999999999999999999 /* AnimationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAAAAAA /* AnimationTypes.swift */; };
+		BBBBBBBBBBBBBBBBBBBBBBBB /* FrameAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCCCCCCCCCCCCCCCCCCCCCCC /* FrameAnimator.swift */; };
+		DDDDDDDDDDDDDDDDDDDDDDDD /* AnimationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEEEEEEEEEEEEEEEEEEEEEE /* AnimationEngine.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFF0000 /* PetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFF1111 /* PetState.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFF2222 /* BehaviorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFF3333 /* BehaviorController.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFF4444 /* MovementController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFF5555 /* MovementController.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFF6666 /* InteractionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFF7777 /* InteractionHandler.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFF8888 /* LocalImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFF9999 /* LocalImageProcessor.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFFAAAA /* PetConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFFBBBB /* PetConfiguration.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFFCCCC /* PetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFFDDDD /* PetViewModel.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFFEEEE /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFF0000 /* PetView.swift */; };
+		FFFFFFFFFFFFFFFFFFFFFFFF1111 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFFFFFFFFFFFFFFFFFFFFF2222 /* SettingsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AAAAAAAAAAAAAAAAAAAA0000 /* DesktopPet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DesktopPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		222222222222222222222222 /* DesktopPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopPetApp.swift; sourceTree = "<group>"; };
+		444444444444444444444444 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		666666666666666666666666 /* PetWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetWindow.swift; sourceTree = "<group>"; };
+		888888888888888888888888 /* PetWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetWindowController.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAAAAAA /* AnimationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationTypes.swift; sourceTree = "<group>"; };
+		CCCCCCCCCCCCCCCCCCCCCCCC /* FrameAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameAnimator.swift; sourceTree = "<group>"; };
+		EEEEEEEEEEEEEEEEEEEEEEEE /* AnimationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationEngine.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFF1111 /* PetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetState.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFF3333 /* BehaviorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorController.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFF5555 /* MovementController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovementController.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFF7777 /* InteractionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionHandler.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFF9999 /* LocalImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalImageProcessor.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFFBBBB /* PetConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetConfiguration.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFFDDDD /* PetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetViewModel.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFF0000 /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
+		FFFFFFFFFFFFFFFFFFFFFFFF2222 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		GGGGGGGGGGGGGGGGGGGGGGGGG /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		HHHHHHHHHHHHHHHHHHHHHHHHH /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BBBBBBBBBBBBBBBBBBBB0000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CCCCCCCCCCCCCCCCCCCC0000 = {
+			isa = PBXGroup;
+			children = (
+				DDDDDDDDDDDDDDDDDDDD0000 /* DesktopPet */,
+				EEEEEEEEEEEEEEEEEEEE0000 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EEEEEEEEEEEEEEEEEEEE0000 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA0000 /* DesktopPet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DDDDDDDDDDDDDDDDDDDD0000 /* DesktopPet */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFF0000 /* App */,
+				FFFFFFFFFFFFFFFF1111 /* Core */,
+				FFFFFFFFFFFFFFFF2222 /* Services */,
+				FFFFFFFFFFFFFFFF3333 /* Models */,
+				FFFFFFFFFFFFFFFF4444 /* ViewModels */,
+				FFFFFFFFFFFFFFFF5555 /* Views */,
+				FFFFFFFFFFFFFFFF6666 /* Resources */,
+			);
+			path = DesktopPet;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF0000 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				222222222222222222222222 /* DesktopPetApp.swift */,
+				444444444444444444444444 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF1111 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFF7777 /* PetWindow */,
+				FFFFFFFFFFFFFFFF8888 /* Animation */,
+				FFFFFFFFFFFFFFFF9999 /* Behavior */,
+				FFFFFFFFFFFFFFFFAAAA /* Interaction */,
+				FFFFFFFFFFFFFFFFBBBB /* Movement */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF7777 /* PetWindow */ = {
+			isa = PBXGroup;
+			children = (
+				666666666666666666666666 /* PetWindow.swift */,
+				888888888888888888888888 /* PetWindowController.swift */,
+			);
+			path = PetWindow;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF8888 /* Animation */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAAAAAA /* AnimationTypes.swift */,
+				CCCCCCCCCCCCCCCCCCCCCCCC /* FrameAnimator.swift */,
+				EEEEEEEEEEEEEEEEEEEEEEEE /* AnimationEngine.swift */,
+			);
+			path = Animation;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF9999 /* Behavior */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFFFFFFFFF1111 /* PetState.swift */,
+				FFFFFFFFFFFFFFFFFFFFFFFF3333 /* BehaviorController.swift */,
+			);
+			path = Behavior;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFFAAAA /* Interaction */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFFFFFFFFF7777 /* InteractionHandler.swift */,
+			);
+			path = Interaction;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFFBBBB /* Movement */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFFFFFFFFF5555 /* MovementController.swift */,
+			);
+			path = Movement;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF2222 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFCCCC /* ImageProcessing */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFFCCCC /* ImageProcessing */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFFFFFFFFF9999 /* LocalImageProcessor.swift */,
+			);
+			path = ImageProcessing;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF3333 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFFFFFFFFFBBBB /* PetConfiguration.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF4444 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFFFFFFFFFDDDD /* PetViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF5555 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				FFFFFFFFFFFFFFFFFFFFFFFF0000 /* PetView.swift */,
+				FFFFFFFFFFFFFFFFFFFFFFFF2222 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		FFFFFFFFFFFFFFFF6666 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				GGGGGGGGGGGGGGGGGGGGGGGGG /* Info.plist */,
+				HHHHHHHHHHHHHHHHHHHHHHHHH /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		IIIIIIIIIIIIIIIIIIII0000 /* DesktopPet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = JJJJJJJJJJJJJJJJJJJJ0000 /* Build configuration list for PBXNativeTarget "DesktopPet" */;
+			buildPhases = (
+				KKKKKKKKKKKKKKKKKKKK0000 /* Sources */,
+				BBBBBBBBBBBBBBBBBBBB0000 /* Frameworks */,
+				LLLLLLLLLLLLLLLLLLLL0000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DesktopPet;
+			productName = DesktopPet;
+			productReference = AAAAAAAAAAAAAAAAAAAA0000 /* DesktopPet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		MMMMMMMMMMMMMMMMMMMM0000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					IIIIIIIIIIIIIIIIIIII0000 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = NNNNNNNNNNNNNNNNNNNN0000 /* Build configuration list for PBXProject "DesktopPet" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = CCCCCCCCCCCCCCCCCCCCCC0000;
+			productRefGroup = EEEEEEEEEEEEEEEEEEEE0000 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				IIIIIIIIIIIIIIIIIIII0000 /* DesktopPet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		LLLLLLLLLLLLLLLLLLLL0000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				OOOOOOOOOOOOOOOOOOOO0000 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		KKKKKKKKKKKKKKKKKKKK0000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				111111111111111111111111 /* DesktopPetApp.swift in Sources */,
+				333333333333333333333333 /* AppDelegate.swift in Sources */,
+				555555555555555555555555 /* PetWindow.swift in Sources */,
+				777777777777777777777777 /* PetWindowController.swift in Sources */,
+				999999999999999999999999 /* AnimationTypes.swift in Sources */,
+				BBBBBBBBBBBBBBBBBBBBBBBB /* FrameAnimator.swift in Sources */,
+				DDDDDDDDDDDDDDDDDDDDDDDD /* AnimationEngine.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFF0000 /* PetState.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFF2222 /* BehaviorController.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFF4444 /* MovementController.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFF6666 /* InteractionHandler.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFF8888 /* LocalImageProcessor.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFFAAAA /* PetConfiguration.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFFCCCC /* PetViewModel.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFFEEEE /* PetView.swift in Sources */,
+				FFFFFFFFFFFFFFFFFFFFFFFF1111 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		PPPPPPPPPPPPPPPPPPPP0000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		PPPPPPPPPPPPPPPPPPP11111 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		QQQQQQQQQQQQQQQQQQQQ0000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DesktopPet/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.desktoppet.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		QQQQQQQQQQQQQQQQQQQQ1111 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DesktopPet/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.desktoppet.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		NNNNNNNNNNNNNNNNNNNN0000 /* Build configuration list for PBXProject "DesktopPet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				PPPPPPPPPPPPPPPPPPPP0000 /* Debug */,
+				PPPPPPPPPPPPPPPPPPP11111 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		JJJJJJJJJJJJJJJJJJJJ0000 /* Build configuration list for PBXNativeTarget "DesktopPet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				QQQQQQQQQQQQQQQQQQQQ0000 /* Debug */,
+				QQQQQQQQQQQQQQQQQQQQ1111 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = MMMMMMMMMMMMMMMMMMMMMM0000 /* Project object */;
+}
