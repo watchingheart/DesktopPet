@@ -8,6 +8,10 @@ let package = Package(
         .executableTarget(
             name: "DesktopPet",
             path: "src/DesktopPet"
+        ),
+        .executableTarget(
+            name: "MiniRabbit",
+            path: "src/MiniRabbit"
         )
     ]
 )

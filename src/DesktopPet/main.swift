@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import Combine
 import CoreGraphics
-import CommonCrypto
+import CryptoKit
 
 // MARK: - Configuration Constants
 
@@ -36,13 +36,13 @@ enum LayoutConstants {
     static let gifDisplayScale: CGFloat = 0.5
 
     /// Size for mini rabbits (2/3 of big rabbit)
-    static let miniPetSize: CGFloat = 53
+    static let miniPetSize: CGFloat = 200  // 2/3 of 300px (big rabbit display size)
 
     /// Maximum number of mini rabbits allowed at once
     static let maxMiniRabbits: Int = 3
 
     /// Duration before mini rabbits auto-disappear (seconds)
-    static let miniRabbitLifetime: TimeInterval = 3.0
+    static let miniRabbitLifetime: TimeInterval = 10.0
 }
 
 /// API and network constants
@@ -150,7 +150,7 @@ class AnimationCache {
     // 生成缓存键（基于图片哈希）
     private func cacheKey(for image: NSImage, action: String) -> String {
         guard let data = image.tiffRepresentation else { return "\(action)_default" }
-        let hash = data.sha256?.prefix(16) ?? "default"
+        let hash = data.sha256.prefix(16)
         return "\(action)_\(hash)"
     }
 
@@ -217,14 +217,10 @@ class AnimationCache {
 
 extension Data {
     /// Computes the SHA-256 hash of this data.
-    /// - Returns: Hexadecimal string representation of the hash, or nil if computation fails.
-    var sha256: String? {
-        guard let digest = self.withUnsafeBytes({ bytes -> [UInt8]? in
-            var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-            CC_SHA256(bytes.baseAddress, CC_LONG(self.count), &hash)
-            return hash
-        }) else { return nil }
-        return digest.map { String(format: "%02x", $0) }.joined()
+    /// - Returns: Hexadecimal string representation of the hash.
+    var sha256: String {
+        let hash = SHA256.hash(data: self)
+        return hash.compactMap { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -722,19 +718,6 @@ enum PetState: Int {
     }
 }
 
-// MARK: - Mini Rabbit Model
-
-/// Represents a mini rabbit that spawns and runs around.
-/// Mini rabbits are smaller versions of the pet that appear temporarily.
-struct MiniRabbit: Identifiable {
-    let id = UUID()
-    let image: NSImage
-    let spawnTime: Date
-    var position: CGPoint
-    var opacity: CGFloat = 1.0
-    var timer: Timer?
-}
-
 // MARK: - Pet Controller
 
 /// Main controller for the desktop pet.
@@ -745,7 +728,7 @@ class PetController: ObservableObject {
     @Published var isSleeping: Bool = false
     @Published var petImage: NSImage?
     @Published var soundText: String? = nil
-    @Published var miniRabbits: [MiniRabbit] = []
+    var miniRabbitProcesses: [Process] = []
 
     var onPositionChange: ((CGPoint) -> Void)?
     var onJump: (() -> Void)?
@@ -1049,8 +1032,8 @@ class PetController: ObservableObject {
         }
         scheduleBehaviorChange()
 
-        // Randomly spawn mini rabbit (10% chance)
-        if Int.random(in: 0...100) < 10 {
+        // Randomly spawn mini rabbit (50% chance)
+        if Int.random(in: 0...100) < 50 {
             spawnMiniRabbit()
         }
     }
@@ -1175,6 +1158,8 @@ class PetController: ObservableObject {
             }
             self.transform = FrameTransform(scaleX: squash, scaleY: 2.0 - squash)
         }
+    }
+
     func beginDrag() {
         behaviorTimer?.invalidate()
         stopWalking()
@@ -1192,69 +1177,73 @@ class PetController: ObservableObject {
 
     // MARK: - Mini Rabbits
 
-    /// Spawns a mini rabbit at a random position near the pet.
+    /// Spawns a mini rabbit as a separate process.
     /// Mini rabbits are 2/3 the size of the main pet and run around.
     /// They automatically disappear after ~3 seconds.
     /// Maximum of 3 mini rabbits can exist at once.
     func spawnMiniRabbit() {
-        guard miniRabbits.count < LayoutConstants.maxMiniRabbits else { return }
-        guard let petImage = petImage else { return }
+        guard miniRabbitProcesses.count < LayoutConstants.maxMiniRabbits else { return }
 
-        // Generate random position near current position
-        let randomOffset: CGFloat = CGFloat.random(in: -100...100)
-        let spawnPosition = CGPoint(
-            x: position.x + randomOffset,
-            y: position.y + randomOffset
-        )
+        // Find the MiniRabbit executable path
+        guard let executablePath = findMiniRabbitExecutable() else {
+            print("Warning: MiniRabbit executable not found")
+            return
+        }
 
-        var miniRabbit = MiniRabbit(
-            image: petImage,
-            spawnTime: Date(),
-            position: spawnPosition
-        )
+        // Build arguments for MiniRabbit configuration
+        var arguments = [String]()
 
-        // Set up timer for auto-disappear and running animation
-        miniRabbit.timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] timer in
-            guard let self = self else {
-                timer.invalidate()
-                return
+        // Set size (2/3 of big rabbit = 200px)
+        arguments.append("--size")
+        arguments.append("200")
+
+        // Set lifetime (10 seconds)
+        arguments.append("--lifetime")
+        arguments.append("10")
+
+        // Create and launch the process
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: executablePath)
+        task.arguments = arguments
+
+        // Debug: show spawned arguments
+        print("MiniRabbit spawned with args: \(arguments)")
+
+        // Set current working directory to ensure GIF can be found
+        task.currentDirectoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+
+        do {
+            try task.run()
+            // Store the process reference
+            miniRabbitProcesses.append(task)
+
+            // Clean up finished processes after lifetime
+            DispatchQueue.main.asyncAfter(deadline: .now() + LayoutConstants.miniRabbitLifetime + 1.0) {
+                self.miniRabbitProcesses.removeAll { !$0.isRunning }
             }
+        } catch {
+            print("Error spawning MiniRabbit: \(error)")
+        }
+    }
 
-            let elapsed = Date().timeIntervalSince(miniRabbit.spawnTime)
+    /// Finds the MiniRabbit executable path.
+    private func findMiniRabbitExecutable() -> String? {
+        // Try multiple possible paths
+        let paths = [
+            ".build/debug/MiniRabbit",
+            "../.build/debug/MiniRabbit",
+            "../../../.build/debug/MiniRabbit"
+        ]
 
-            // Fade out in the last second
-            if elapsed >= LayoutConstants.miniRabbitLifetime - 1.0 {
-                miniRabbit.opacity = CGFloat(LayoutConstants.miniRabbitLifetime - elapsed)
-            }
-
-            // Auto-remove after lifetime
-            if elapsed >= LayoutConstants.miniRabbitLifetime {
-                self.removeMiniRabbit(miniRabbit)
-                timer.invalidate()
-                return
-            }
-
-            // Make mini rabbit run around
-            let runSpeed: CGFloat = 2.0
-            let randomX = CGFloat.random(in: -runSpeed...runSpeed)
-            let randomY = CGFloat.random(in: -runSpeed...runSpeed)
-            miniRabbit.position.x += randomX
-            miniRabbit.position.y += randomY
-
-            // Update the mini rabbit in the array
-            if let index = self.miniRabbits.firstIndex(where: { $0.id == miniRabbit.id }) {
-                self.miniRabbits[index] = miniRabbit
+        let cwd = FileManager.default.currentDirectoryPath
+        for path in paths {
+            let fullPath = URL(fileURLWithPath: cwd).appendingPathComponent(path).path
+            if FileManager.default.fileExists(atPath: fullPath) {
+                return fullPath
             }
         }
 
-        miniRabbits.append(miniRabbit)
-    }
-
-    /// Removes a specific mini rabbit from the array and invalidates its timer.
-    /// - Parameter miniRabbit: The mini rabbit to remove
-    func removeMiniRabbit(_ miniRabbit: MiniRabbit) {
-        miniRabbit.timer?.invalidate()
-        miniRabbits.removeAll { $0.id == miniRabbit.id }
+        return nil
     }
 }
 
@@ -1340,18 +1329,6 @@ struct PetViewContent: View {
         .animation(.easeOut(duration: 0.3), value: controller.soundText)
         .background(Color.clear)
         .frame(maxWidth: LayoutConstants.mainWindowSize.width, maxHeight: LayoutConstants.mainWindowSize.height)
-        .overlay(
-            // Mini Rabbits Overlay
-            ZStack {
-                ForEach(controller.miniRabbits) { miniRabbit in
-                    MiniRabbitView(
-                        image: miniRabbit.image,
-                        opacity: miniRabbit.opacity,
-                        position: miniRabbit.position
-                    )
-                }
-            }
-        )
         .contentShape(Rectangle())
     }
 }
@@ -1443,7 +1420,22 @@ class PetInteractionView: NSView {
 
         // 使用系统的 clickCount 来判断单击/双击
 
-        let clickLocation = event.locationInWindow
+        let location = event.locationInWindow
+
+        // 只处理中心 100x100 区域内的点击
+        let windowSize = LayoutConstants.mainWindowSize
+        let centerX = windowSize.width / 2
+        let centerY = windowSize.height / 2
+        let clickAreaSize: CGFloat = 100
+        let halfSize = clickAreaSize / 2
+
+        let inClickArea = abs(location.x - centerX) <= halfSize &&
+                          abs(location.y - centerY) <= halfSize
+
+        guard inClickArea else {
+            // 点击区域外，忽略
+            return
+        }
 
         if clickCount == 2 {
             // 双击 - 直接处理，取消延迟的单击
@@ -1844,20 +1836,3 @@ let delegate = AppDelegate()
 NSApp.delegate = delegate
 NSApp.run()
 
-// MARK: - Mini Rabbit View
-
-/// SwiftUI view for rendering a mini rabbit.
-/// Mini rabbits are smaller versions of the pet that run around temporarily.
-struct MiniRabbitView: View {
-    let image: NSImage
-    let opacity: CGFloat
-    let position: CGPoint
-
-    var body: some View {
-        Image(nsImage: image)
-            .resizable()
-            .frame(width: LayoutConstants.miniPetSize, height: LayoutConstants.miniPetSize)
-            .opacity(opacity)
-            .position(x: position.x, y: position.y)
-    }
-}
