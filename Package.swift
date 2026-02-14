@@ -3,15 +3,10 @@ import PackageDescription
 
 let package = Package(
     name: "DesktopPet",
-    platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
             name: "DesktopPet",
             path: "src/DesktopPet"
-        ),
-        .executableTarget(
-            name: "MiniRabbit",
-            path: "src/MiniRabbit"
         )
     ]
 )
